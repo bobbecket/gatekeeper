@@ -64,7 +64,20 @@ const USERS = [
 //  4. if matching user found, add the user object to the request object
 //     (aka, `req.user = matchedUser`)
 function gateKeeper(req, res, next) {
-  const usernameAndPasswordString = req.get('x-username-and-password');
+  
+  const credentials = req.get('x-username-and-password');
+  
+  const parsedCredentials = queryString.parse(credentials);
+  
+  const foundUser = USERS.find(function(user) {
+    return ((user.userName == parsedCredentials.user)
+      && (user.password == parsedCredentials.pass));
+  });
+  
+  if (foundUser) {
+    req.user = foundUser;
+  }
+  
   next();
 }
 
@@ -82,6 +95,7 @@ app.get("/api/users/me", (req, res) => {
   // we're only returning a subset of the properties
   // from the user object. Notably, we're *not*
   // sending `password` or `isAdmin`.
+  console.log(req.user);
   const {firstName, lastName, id, userName, position} = req.user;
   return res.json({firstName, lastName, id, userName, position});
 });
